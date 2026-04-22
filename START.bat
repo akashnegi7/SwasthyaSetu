@@ -34,7 +34,7 @@ echo.
 echo  =============================================
 echo   Server is starting...
 echo   Open your browser and go to:
-echo   >>> http://localhost:5000 <<<
+echo   ^>^>^> http://localhost:5000 ^<^<^<
 echo  =============================================
 echo.
 echo  IMPORTANT: Keep this window open while using the app!
