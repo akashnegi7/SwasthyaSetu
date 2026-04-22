@@ -1,0 +1,11 @@
+const router = require('express').Router();
+const { protect, patientOnly } = require('../middleware/auth');
+const c = require('../controllers/patientController');
+router.use(protect, patientOnly);
+router.get('/profile', c.getProfile);
+router.get('/records', c.getRecords);
+router.get('/summary', c.getSummary);
+router.get('/access-requests', c.getAccessRequests);
+router.post('/respond-access/:id', c.respondAccess);
+router.get('/audit-logs', c.getAuditLogs);
+module.exports = router;

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login · SwasthyaSetu+</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-logo">🏥</div>
+    <h1 class="auth-title">SwasthyaSetu+</h1>
+    <p class="auth-sub">National Digital Health Records · India 🇮🇳</p>
+
+    <!-- Role Toggle -->
+    <div class="role-toggle">
+      <button class="role-btn active" id="btn-patient" onclick="switchRole('patient')">👤 Patient</button>
+      <button class="role-btn" id="btn-doctor" onclick="switchRole('doctor')">👨‍⚕️ Doctor</button>
+    </div>
+
+    <!-- Quick Fill -->
+    <div class="quick-label">⚡ Quick Demo Login</div>
+    <div class="quick-fill" id="quick-fill">
+      <button class="quick-btn" onclick="fill('rahul@example.com')">👤 Rahul Sharma</button>
+      <button class="quick-btn" onclick="fill('priya@example.com')">👤 Priya Verma</button>
+    </div>
+
+    <!-- Form -->
+    <form id="login-form" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input class="form-input" type="email" id="email" placeholder="your@email.com" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" type="password" id="password" placeholder="Enter your password" required />
+      </div>
+      <button class="btn btn-primary btn-full" type="submit" id="login-btn">🔐 Login to Dashboard</button>
+    </form>
+
+    <div class="auth-footer">
+      Don't have an account? <a href="/register.html">Register here</a><br><br>
+      <a href="/" style="color:var(--text3)">← Back to Home</a>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+  let activeRole = 'patient';
+
+  const DEMO = {
+    patient: ['rahul@example.com', 'priya@example.com'],
+    doctor:  ['amit.doctor@example.com', 'neha.doctor@example.com']
+  };
+  const LABELS = {
+    'rahul@example.com':        '👤 Rahul Sharma',
+    'priya@example.com':        '👤 Priya Verma',
+    'amit.doctor@example.com':  '👨‍⚕️ Dr. Amit Sharma',
+    'neha.doctor@example.com':  '👩‍⚕️ Dr. Neha Gupta'
+  };
+
+  function switchRole(role) {
+    activeRole = role;
+    document.getElementById('btn-patient').classList.toggle('active', role === 'patient');
+    document.getElementById('btn-doctor').classList.toggle('active', role === 'doctor');
+    const qf = document.getElementById('quick-fill');
+    qf.innerHTML = DEMO[role].map(e =>
+      `<button class="quick-btn" onclick="fill('${e}')">${LABELS[e]}</button>`
+    ).join('');
+  }
+
+  function fill(email) {
+    document.getElementById('email').value = email;
+    document.getElementById('password').value = 'password123';
+  }
+
+  async function handleLogin(e) {
+    e.preventDefault();
+    const btn = document.getElementById('login-btn');
+    btn.textContent = '⏳ Logging in...';
+    btn.disabled = true;
+    try {
+      const data = await POST('/auth/login', {
+        email:    document.getElementById('email').value.trim(),
+        password: document.getElementById('password').value
+      });
+      setAuth(data.token, data.user);
+      toastSuccess('Welcome back, ' + data.user.name + '!');
+      setTimeout(() => {
+        window.location.href = data.user.role === 'patient' ? '/patient/dashboard.html' : '/doctor/dashboard.html';
+      }, 600);
+    } catch (err) {
+      toastError(err.message || 'Login failed. Check credentials.');
+      btn.textContent = '🔐 Login to Dashboard';
+      btn.disabled = false;
+    }
+  }
+</script>
+</body>
+</html>

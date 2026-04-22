@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Doctor Dashboard · SwasthyaSetu+</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+<div class="dash-wrapper">
+  <!-- ── Sidebar ─────────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🏥</div>
+      <div class="logo-name">SwasthyaSetu+</div>
+      <div class="logo-sub green">Doctor Portal</div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-avatar green">👨‍⚕️</div>
+      <div class="user-name"  id="sb-name">Loading…</div>
+      <div class="user-hid green" id="sb-spec">—</div>
+      <div class="user-meta"  id="sb-hosp">—</div>
+      <div class="user-meta"  id="sb-id">—</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active green-active" data-panel="search"   onclick="showPanel('search')"><span class="nav-icon">🔍</span> Search Patient</div>
+      <div class="nav-item"                     data-panel="activity" onclick="showPanel('activity')"><span class="nav-icon">📊</span> My Activity</div>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="doLogout()">🚪 Logout</button>
+    </div>
+  </aside>
+
+  <!-- ── Main ───────────────────────────────────────────────── -->
+  <main class="main-content">
+
+    <!-- SEARCH PATIENT -->
+    <section class="panel active" id="panel-search">
+      <div class="page-header">
+        <div class="page-title">🔍 Search Patient</div>
+        <div class="page-sub">Enter a Health ID to look up patient records</div>
+      </div>
+
+      <div class="search-box">
+        <input id="hid-input" placeholder="Enter Health ID (e.g. IND-HID-2026-0001)"
+               onkeydown="if(event.key==='Enter') searchPatient()" />
+        <button class="btn btn-green" onclick="searchPatient()" id="search-btn">🔍 Search</button>
+      </div>
+
+      <!-- Quick demo shortcuts -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;align-items:center">
+        <span style="font-size:12px;color:var(--text3);font-weight:700">QUICK:</span>
+        <button class="quick-btn" onclick="quickSearch('IND-HID-2026-0001')">IND-HID-2026-0001 (Rahul)</button>
+        <button class="quick-btn" onclick="quickSearch('IND-HID-2026-0002')">IND-HID-2026-0002 (Priya)</button>
+      </div>
+
+      <!-- Patient Result -->
+      <div id="patient-result" class="hidden"></div>
+
+      <!-- Patient Records -->
+      <div id="patient-records-section" class="hidden">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <h3 id="patient-records-title">Patient Records</h3>
+          <button class="btn btn-green btn-sm" id="add-record-btn" onclick="openAddModal()">+ Add Record</button>
+        </div>
+        <div id="patient-records-list"></div>
+      </div>
+    </section>
+
+    <!-- ACTIVITY -->
+    <section class="panel" id="panel-activity">
+      <div class="page-header">
+        <div class="page-title">📊 My Activity</div>
+        <div class="page-sub">Recent actions and access request history</div>
+      </div>
+      <div class="stats-grid" style="max-width:600px">
+        <div class="stat-card green"><div class="stat-icon">📋</div><div class="stat-num green" id="act-total">—</div><div class="stat-label">Total Requests</div></div>
+        <div class="stat-card blue"><div class="stat-icon">✅</div><div class="stat-num blue" id="act-approved">—</div><div class="stat-label">Approved</div></div>
+        <div class="stat-card yellow"><div class="stat-icon">👁</div><div class="stat-num yellow" id="act-views">—</div><div class="stat-label">Records Viewed</div></div>
+      </div>
+      <div id="activity-logs"><div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-text">Loading…</div></div></div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ── Add Record Modal ────────────────────────────────────── -->
+<div class="modal-overlay hidden" id="add-modal" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-title">📋 Add Medical Record</div>
+    <div class="modal-sub" id="modal-patient-hid">Patient: —</div>
+
+    <div class="form-group">
+      <label class="form-label">Record Type</label>
+      <select class="form-select" id="rec-type" onchange="switchRecordType()">
+        <option>Diagnosis</option>
+        <option>Prescription</option>
+        <option>Lab Test</option>
+        <option>Procedure</option>
+      </select>
+    </div>
+
+    <!-- DIAGNOSIS -->
+    <div id="section-diagnosis" class="modal-section">
+      <div class="modal-section-title">🔴 Diagnosis Information</div>
+      <div class="form-group">
+        <label class="form-label">Disease / Condition *</label>
+        <input class="form-input" id="diag-disease" placeholder="e.g. Hypertension Stage 2" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Severity</label>
+        <select class="form-select" id="diag-severity">
+          <option>Mild</option><option>Moderate</option><option>Severe</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Symptoms (comma separated)</label>
+        <input class="form-input" id="diag-symptoms" placeholder="Headache, Dizziness, Fatigue" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Doctor Notes</label>
+        <textarea class="form-textarea" id="diag-notes" placeholder="Clinical notes, treatment plan…"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Follow-up Date</label>
+        <input class="form-input" type="date" id="diag-followup" />
+      </div>
+    </div>
+
+    <!-- PRESCRIPTION -->
+    <div id="section-prescription" class="modal-section hidden">
+      <div class="modal-section-title">💊 Medicines</div>
+      <div id="meds-container"></div>
+      <button class="add-more-btn" onclick="addMed()">+ Add Another Medicine</button>
+      <div class="form-group">
+        <label class="form-label">Additional Notes</label>
+        <textarea class="form-textarea" id="pres-notes" placeholder="Diet, exercise, precautions…"></textarea>
+      </div>
+    </div>
+
+    <!-- LAB TEST -->
+    <div id="section-labtest" class="modal-section hidden">
+      <div class="modal-section-title">🧪 Lab Test Results</div>
+      <div id="labs-container"></div>
+      <button class="add-more-btn" onclick="addLab()">+ Add Another Test</button>
+      <div class="form-group">
+        <label class="form-label">Lab Notes</label>
+        <textarea class="form-textarea" id="lab-notes" placeholder="Interpretation, recommendations…"></textarea>
+      </div>
+    </div>
+
+    <!-- PROCEDURE -->
+    <div id="section-procedure" class="modal-section hidden">
+      <div class="modal-section-title">🔬 Procedure Details</div>
+      <div class="form-group">
+        <label class="form-label">Procedure Name *</label>
+        <input class="form-input" id="proc-name" placeholder="e.g. Coronary Angiography" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Anesthesia Used</label>
+        <input class="form-input" id="proc-anes" placeholder="Local anesthesia with sedation" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="form-textarea" id="proc-desc" placeholder="Describe the procedure…"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Outcome</label>
+        <textarea class="form-textarea" id="proc-outcome" placeholder="Findings, outcome, post-op notes…"></textarea>
+      </div>
+    </div>
+
+    <div class="modal-btns">
+      <button class="btn btn-outline" style="flex:0" onclick="document.getElementById('add-modal').classList.add('hidden')">Cancel</button>
+      <button class="btn btn-green" style="flex:1;justify-content:center" id="save-rec-btn" onclick="saveRecord()">✅ Save Record</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+// ── State ──────────────────────────────────────────────────────
+let USER = null;
+let currentPatient  = null;
+let currentHasAccess = false;
+let medCount = 0;
+let labCount = 0;
+
+// ── Init ───────────────────────────────────────────────────────
+(async function init() {
+  USER = requireAuth('doctor');
+  if (!USER) return;
+  document.getElementById('sb-name').textContent = USER.name;
+  document.getElementById('sb-spec').textContent = USER.specialization || '—';
+  document.getElementById('sb-hosp').textContent = '🏥 ' + (USER.hospitalName || '—');
+  document.getElementById('sb-id').textContent   = '📛 ' + (USER.doctorId || '—');
+  addMed(); addLab();
+  await loadActivity();
+})();
+
+function showPanel(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => { n.classList.remove('active'); n.classList.remove('green-active'); });
+  document.getElementById('panel-' + name).classList.add('active');
+  const ni = document.querySelector(`[data-panel="${name}"]`);
+  ni.classList.add('active'); ni.classList.add('green-active');
+}
+function doLogout() { clearAuth(); window.location.href = '/'; }
+
+// ── Search ─────────────────────────────────────────────────────
+function quickSearch(hid) {
+  document.getElementById('hid-input').value = hid;
+  searchPatient();
+}
+
+async function searchPatient() {
+  const hid = document.getElementById('hid-input').value.trim();
+  if (!hid) { toastError('Please enter a Health ID'); return; }
+  const btn = document.getElementById('search-btn');
+  btn.textContent = '⏳ Searching…'; btn.disabled = true;
+  try {
+    const data = await GET('/doctor/patient/' + encodeURIComponent(hid));
+    currentPatient   = data.patient;
+    currentHasAccess = data.hasAccess;
+    renderPatientCard(data.patient, data.hasAccess);
+    if (data.hasAccess) await loadPatientRecords(hid);
+  } catch(e) {
+    toastError(e.message || 'Patient not found.');
+    document.getElementById('patient-result').innerHTML = `<div class="alert alert-danger">❌ ${e.message || 'Patient not found.'}</div>`;
+    document.getElementById('patient-result').classList.remove('hidden');
+    document.getElementById('patient-records-section').classList.add('hidden');
+  } finally {
+    btn.textContent = '🔍 Search'; btn.disabled = false;
+  }
+}
+
+function renderPatientCard(p, hasAccess) {
+  const el = document.getElementById('patient-result');
+  el.classList.remove('hidden');
+  el.innerHTML = `
+    <div class="patient-found">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <div>
+          <div class="patient-name">👤 ${p.name}</div>
+          <div class="patient-hid">${p.healthId}</div>
+        </div>
+      </div>
+      <div class="access-banner ${hasAccess ? 'granted' : 'denied'}">
+        ${hasAccess
+          ? '✅ You have approved access to this patient\'s records.'
+          : '⚠️ No access yet. Send a request so the patient can approve you.'}
+      </div>
+      <div class="patient-grid">
+        <div class="patient-info"><div class="patient-info-label">AGE</div><div class="patient-info-value">${calcAge(p.dateOfBirth)}</div></div>
+        <div class="patient-info"><div class="patient-info-label">GENDER</div><div class="patient-info-value">${p.gender || 'N/A'}</div></div>
+        <div class="patient-info"><div class="patient-info-label">BLOOD GROUP</div><div class="patient-info-value" style="color:var(--red)">${p.bloodGroup || 'N/A'}</div></div>
+        <div class="patient-info"><div class="patient-info-label">ALLERGIES</div><div class="patient-info-value" style="color:var(--yellow);font-size:12px">${(p.allergies||[]).join(', ') || 'None'}</div></div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        ${!hasAccess ? `<button class="btn btn-outline" onclick="sendAccessRequest()">📨 Request Access</button>` : ''}
+        ${hasAccess  ? `<button class="btn btn-green btn-sm" onclick="openAddModal()">+ Add Medical Record</button>` : ''}
+      </div>
+    </div>`;
+}
+
+async function loadPatientRecords(hid) {
+  const sec = document.getElementById('patient-records-section');
+  sec.classList.remove('hidden');
+  document.getElementById('patient-records-title').textContent = `📋 Records for ${hid}`;
+  const listEl = document.getElementById('patient-records-list');
+  listEl.innerHTML = '<div class="muted small">Loading…</div>';
+  try {
+    const { records } = await GET('/doctor/patient-records/' + encodeURIComponent(hid));
+    if (!records.length) {
+      listEl.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No records yet. Add the first one!</div></div>';
+    } else {
+      listEl.innerHTML = records.map(r => buildRecordCard(r)).join('');
+    }
+  } catch(e) { listEl.innerHTML = `<div class="alert alert-danger">${e.message}</div>`; }
+}
+
+async function sendAccessRequest() {
+  if (!currentPatient) return;
+  try {
+    await POST('/doctor/request-access', { healthId: currentPatient.healthId, reason: 'Medical consultation' });
+    toastSuccess('Access request sent! Patient will be notified.');
+  } catch(e) { toastError(e.message); }
+}
+
+// ── Activity ───────────────────────────────────────────────────
+async function loadActivity() {
+  try {
+    const { logs, accessRequests } = await GET('/doctor/activity');
+    document.getElementById('act-total').textContent    = accessRequests.length;
+    document.getElementById('act-approved').textContent = accessRequests.filter(a => a.status === 'approved').length;
+    document.getElementById('act-views').textContent    = logs.filter(l => l.action === 'RECORDS_VIEWED').length;
+
+    const icons = { USER_LOGIN:'🔐', RECORDS_VIEWED:'👁', USER_REGISTERED:'✅', ACCESS_REQUESTED:'📨', RECORD_ADDED:'📋' };
+    const el = document.getElementById('activity-logs');
+    if (!logs.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">📊</div><div class="empty-text">No activity yet.</div></div>'; return; }
+    el.innerHTML = `<div class="log-list">${logs.map(l => `
+      <div class="log-item">
+        <span class="log-icon">${icons[l.action] || '📌'}</span>
+        <div>
+          <div class="log-text">${l.details}</div>
+          <div class="log-time">${fmtDateTime(l.timestamp)}</div>
+        </div>
+      </div>`).join('')}</div>`;
+  } catch(e) { console.error(e); }
+}
+
+// ── Add Record Modal ───────────────────────────────────────────
+function openAddModal() {
+  if (!currentPatient) return;
+  document.getElementById('modal-patient-hid').textContent = 'Patient: ' + currentPatient.healthId;
+  document.getElementById('add-modal').classList.remove('hidden');
+}
+function closeModal(e) {
+  if (e.target.id === 'add-modal') document.getElementById('add-modal').classList.add('hidden');
+}
+
+function switchRecordType() {
+  const t = document.getElementById('rec-type').value;
+  ['diagnosis','prescription','labtest','procedure'].forEach(s =>
+    document.getElementById('section-' + s).classList.add('hidden'));
+  const map = { Diagnosis:'diagnosis', Prescription:'prescription', 'Lab Test':'labtest', Procedure:'procedure' };
+  document.getElementById('section-' + map[t]).classList.remove('hidden');
+}
+
+// Medicine rows
+function addMed() {
+  medCount++;
+  const id = 'med-' + medCount;
+  const div = document.createElement('div');
+  div.className = 'mini-card'; div.id = id;
+  div.innerHTML = `
+    <div class="mini-card-title">
+      💊 Medicine #${medCount}
+      <button class="remove-btn" onclick="document.getElementById('${id}').remove()">Remove</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Medicine Name</label><input class="form-input med-name" placeholder="Amlodipine 5mg" /></div>
+      <div class="form-group"><label class="form-label">Dosage</label><input class="form-input med-dose" placeholder="5mg" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Frequency</label><input class="form-input med-freq" placeholder="Once daily" /></div>
+      <div class="form-group"><label class="form-label">Duration</label><input class="form-input med-dur" placeholder="30 days" /></div>
+    </div>
+    <div class="form-group"><label class="form-label">Instructions</label><input class="form-input med-instr" placeholder="Take after meals" /></div>`;
+  document.getElementById('meds-container').appendChild(div);
+}
+
+// Lab test rows
+function addLab() {
+  labCount++;
+  const id = 'lab-' + labCount;
+  const div = document.createElement('div');
+  div.className = 'mini-card'; div.id = id;
+  div.innerHTML = `
+    <div class="mini-card-title">
+      🧪 Test #${labCount}
+      <button class="remove-btn" onclick="document.getElementById('${id}').remove()">Remove</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Test Name</label><input class="form-input lab-name" placeholder="HbA1c" /></div>
+      <div class="form-group"><label class="form-label">Value</label><input class="form-input lab-val" placeholder="7.2" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Unit</label><input class="form-input lab-unit" placeholder="%" /></div>
+      <div class="form-group"><label class="form-label">Normal Range</label><input class="form-input lab-range" placeholder="<5.7%" /></div>
+    </div>
+    <div class="form-group"><label class="form-label">Status</label>
+      <select class="form-select lab-status"><option>Normal</option><option>Abnormal</option><option>Critical</option></select>
+    </div>`;
+  document.getElementById('labs-container').appendChild(div);
+}
+
+function gv(sel, scope) { return (scope || document).querySelector(sel)?.value?.trim() || ''; }
+
+async function saveRecord() {
+  if (!currentPatient) return;
+  const type = document.getElementById('rec-type').value;
+  const btn  = document.getElementById('save-rec-btn');
+  btn.textContent = '⏳ Saving…'; btn.disabled = true;
+
+  const body = { healthId: currentPatient.healthId, recordType: type };
+
+  if (type === 'Diagnosis') {
+    body.diagnosis = {
+      disease:  document.getElementById('diag-disease').value.trim(),
+      severity: document.getElementById('diag-severity').value,
+      symptoms: document.getElementById('diag-symptoms').value.split(',').map(s=>s.trim()).filter(Boolean),
+      notes:    document.getElementById('diag-notes').value.trim()
+    };
+    const fu = document.getElementById('diag-followup').value;
+    if (fu) body.followUpDate = fu;
+  }
+
+  if (type === 'Prescription') {
+    body.prescription = [...document.querySelectorAll('#meds-container .mini-card')].map(c => ({
+      medicine:     gv('.med-name', c),
+      dosage:       gv('.med-dose', c),
+      frequency:    gv('.med-freq', c),
+      duration:     gv('.med-dur',  c),
+      instructions: gv('.med-instr',c)
+    })).filter(m => m.medicine);
+    body.notes = document.getElementById('pres-notes').value.trim();
+  }
+
+  if (type === 'Lab Test') {
+    body.labTests = [...document.querySelectorAll('#labs-container .mini-card')].map(c => ({
+      testName:    gv('.lab-name',  c),
+      value:       gv('.lab-val',   c),
+      unit:        gv('.lab-unit',  c),
+      normalRange: gv('.lab-range', c),
+      status:      c.querySelector('.lab-status')?.value || 'Normal'
+    })).filter(l => l.testName);
+    body.notes = document.getElementById('lab-notes').value.trim();
+  }
+
+  if (type === 'Procedure') {
+    body.procedure = {
+      name:        document.getElementById('proc-name').value.trim(),
+      anesthesia:  document.getElementById('proc-anes').value.trim(),
+      description: document.getElementById('proc-desc').value.trim(),
+      outcome:     document.getElementById('proc-outcome').value.trim()
+    };
+  }
+
+  try {
+    await POST('/doctor/add-record', body);
+    toastSuccess('Record added successfully!');
+    document.getElementById('add-modal').classList.add('hidden');
+    await loadPatientRecords(currentPatient.healthId);
+  } catch(e) {
+    toastError(e.message || 'Failed to save record.');
+  } finally {
+    btn.textContent = '✅ Save Record'; btn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>

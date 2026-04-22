@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Patient Dashboard · SwasthyaSetu+</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+<div class="dash-wrapper">
+  <!-- ── Sidebar ─────────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🏥</div>
+      <div class="logo-name">SwasthyaSetu+</div>
+      <div class="logo-sub">Patient Portal</div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-avatar blue">👤</div>
+      <div class="user-name"  id="sb-name">Loading…</div>
+      <div class="user-hid blue" id="sb-hid">—</div>
+      <div class="user-meta"  id="sb-meta">—</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" data-panel="overview"  onclick="showPanel('overview')"><span class="nav-icon">🏠</span> Overview</div>
+      <div class="nav-item"       data-panel="records"   onclick="showPanel('records')"><span class="nav-icon">📋</span> My Records</div>
+      <div class="nav-item"       data-panel="access"    onclick="showPanel('access')"><span class="nav-icon">🔐</span> Access Control</div>
+      <div class="nav-item"       data-panel="logs"      onclick="showPanel('logs')"><span class="nav-icon">📜</span> Audit Logs</div>
+      <div class="nav-item"       data-panel="qr"        onclick="showPanel('qr')"><span class="nav-icon">📱</span> Emergency QR</div>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="doLogout()">🚪 Logout</button>
+    </div>
+  </aside>
+
+  <!-- ── Main ───────────────────────────────────────────────── -->
+  <main class="main-content">
+
+    <!-- OVERVIEW -->
+    <section class="panel active" id="panel-overview">
+      <div class="page-header">
+        <div class="page-title" id="welcome-title">Welcome! 👋</div>
+        <div class="page-sub" id="welcome-sub">Your personal health dashboard</div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card blue"><div class="stat-icon">📋</div><div class="stat-num blue" id="stat-total">—</div><div class="stat-label">Total Records</div></div>
+        <div class="stat-card red"><div class="stat-icon">🔴</div><div class="stat-num red" id="stat-diag">—</div><div class="stat-label">Diagnoses</div></div>
+        <div class="stat-card blue"><div class="stat-icon">💊</div><div class="stat-num blue" id="stat-pres">—</div><div class="stat-label">Prescriptions</div></div>
+        <div class="stat-card yellow"><div class="stat-icon">🧪</div><div class="stat-num yellow" id="stat-lab">—</div><div class="stat-label">Lab Tests</div></div>
+        <div class="stat-card purple"><div class="stat-icon">🔬</div><div class="stat-num purple" id="stat-proc">—</div><div class="stat-label">Procedures</div></div>
+      </div>
+
+      <!-- Abnormal Labs Alert -->
+      <div id="abnormal-alert" class="hidden" style="margin-bottom:20px"></div>
+
+      <!-- Hospitals -->
+      <div class="card" id="hospitals-card" style="margin-bottom:20px">
+        <h3 style="margin-bottom:14px">🏥 Connected Hospitals</h3>
+        <div id="hospitals-list"><div class="muted small">Loading…</div></div>
+      </div>
+
+      <!-- Recent Records preview -->
+      <div class="card">
+        <h3 style="margin-bottom:14px">🕐 Recent Records</h3>
+        <div id="recent-records"><div class="muted small">Loading…</div></div>
+      </div>
+    </section>
+
+    <!-- RECORDS -->
+    <section class="panel" id="panel-records">
+      <div class="page-header">
+        <div class="page-title">📋 Medical Records</div>
+        <div class="page-sub">Your complete lifetime medical history</div>
+      </div>
+      <div class="filter-bar">
+        <button class="filter-btn active" onclick="filterRecords('All', this)">All</button>
+        <button class="filter-btn" onclick="filterRecords('Diagnosis', this)">🔴 Diagnosis</button>
+        <button class="filter-btn" onclick="filterRecords('Prescription', this)">💊 Prescription</button>
+        <button class="filter-btn" onclick="filterRecords('Lab Test', this)">🧪 Lab Test</button>
+        <button class="filter-btn" onclick="filterRecords('Procedure', this)">🔬 Procedure</button>
+        <input class="search-input" id="record-search" placeholder="🔍 Search records…" oninput="searchRecords()" />
+      </div>
+      <div id="records-list"><div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-text">Loading records…</div></div></div>
+    </section>
+
+    <!-- ACCESS CONTROL -->
+    <section class="panel" id="panel-access">
+      <div class="page-header">
+        <div class="page-title">🔐 Access Control</div>
+        <div class="page-sub">Manage which doctors can view your records</div>
+      </div>
+      <div id="access-list"><div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-text">Loading…</div></div></div>
+    </section>
+
+    <!-- AUDIT LOGS -->
+    <section class="panel" id="panel-logs">
+      <div class="page-header">
+        <div class="page-title">📜 Audit Logs</div>
+        <div class="page-sub">All activity on your health records</div>
+      </div>
+      <div id="logs-list"><div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-text">Loading…</div></div></div>
+    </section>
+
+    <!-- QR CODE -->
+    <section class="panel" id="panel-qr">
+      <div class="page-header">
+        <div class="page-title">📱 Emergency QR Code</div>
+        <div class="page-sub">Show this to emergency responders for instant access to critical info</div>
+      </div>
+      <div class="card qr-card" style="max-width:480px">
+        <div class="qr-wrapper" id="qr-img">⏳ Generating…</div>
+        <div class="small muted">Scan for emergency medical information</div>
+        <div class="qr-info-grid" id="qr-info"></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+// ── State ──────────────────────────────────────────────────────
+let USER = null;
+let ALL_RECORDS = [];
+let currentFilter = 'All';
+
+// ── Init ───────────────────────────────────────────────────────
+(async function init() {
+  USER = requireAuth('patient');
+  if (!USER) return;
+
+  // Fill sidebar
+  document.getElementById('sb-name').textContent = USER.name;
+  document.getElementById('sb-hid').textContent  = USER.healthId;
+  document.getElementById('sb-meta').textContent = `🩸 ${USER.bloodGroup || 'N/A'} · ${USER.gender || ''}`;
+  document.getElementById('welcome-title').textContent = `Welcome, ${USER.name.split(' ')[0]}! 👋`;
+  document.getElementById('welcome-sub').textContent   = `Health ID: ${USER.healthId}`;
+
+  await Promise.all([loadSummary(), loadRecords(), loadAccess(), loadLogs()]);
+  buildQR();
+})();
+
+// ── Panel navigation ───────────────────────────────────────────
+function showPanel(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  document.querySelector(`[data-panel="${name}"]`).classList.add('active');
+}
+
+function doLogout() { clearAuth(); window.location.href = '/'; }
+
+// ── Summary ────────────────────────────────────────────────────
+async function loadSummary() {
+  try {
+    const { summary: s } = await GET('/patient/summary');
+    document.getElementById('stat-total').textContent = s.total;
+    document.getElementById('stat-diag').textContent  = s.diagnosis;
+    document.getElementById('stat-pres').textContent  = s.prescription;
+    document.getElementById('stat-lab').textContent   = s.labTest;
+    document.getElementById('stat-proc').textContent  = s.procedure;
+
+    // Abnormal alerts
+    if (s.abnormalLabs && s.abnormalLabs.length > 0) {
+      const html = `<div class="alert alert-danger">
+        <strong>⚠️ Abnormal Lab Results — Requires Attention</strong>
+        <div style="margin-top:8px;display:flex;flex-direction:column;gap:5px">
+        ${s.abnormalLabs.map(t => `
+          <div style="font-size:13px">
+            <span style="color:${t.status==='Critical'?'var(--red)':'var(--yellow)'}">
+              ${t.status==='Critical'?'🚨':'⚠️'} ${t.status}
+            </span>
+            &nbsp; ${t.testName}: <strong>${t.value} ${t.unit}</strong>
+            <span style="color:var(--text3)"> (Normal: ${t.normalRange})</span>
+          </div>`).join('')}
+        </div>
+      </div>`;
+      const el = document.getElementById('abnormal-alert');
+      el.innerHTML = html; el.classList.remove('hidden');
+    }
+
+    // Hospitals
+    const hl = document.getElementById('hospitals-list');
+    if (s.hospitals && s.hospitals.length) {
+      hl.innerHTML = s.hospitals.map(h =>
+        `<div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;gap:8px;font-size:14px;color:var(--text2)"><span>🏥</span>${h}</div>`
+      ).join('');
+    } else {
+      hl.innerHTML = '<div class="muted small">No hospitals yet.</div>';
+    }
+  } catch (e) { console.error(e); }
+}
+
+// ── Records ────────────────────────────────────────────────────
+async function loadRecords() {
+  try {
+    const { records } = await GET('/patient/records');
+    ALL_RECORDS = records;
+    renderRecords(records);
+
+    // Recent 3 on overview
+    const recent = document.getElementById('recent-records');
+    if (!records.length) { recent.innerHTML = '<div class="muted small">No records yet.</div>'; return; }
+    recent.innerHTML = records.slice(0, 3).map(r => buildRecordCard(r)).join('');
+  } catch(e) { console.error(e); }
+}
+
+function renderRecords(list) {
+  const el = document.getElementById('records-list');
+  if (!list.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No records found.</div></div>';
+    return;
+  }
+  el.innerHTML = list.map(r => buildRecordCard(r)).join('');
+}
+
+function filterRecords(type, btn) {
+  currentFilter = type;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+
+function searchRecords() { applyFilters(); }
+
+function applyFilters() {
+  const search = document.getElementById('record-search').value.toLowerCase();
+  let list = ALL_RECORDS;
+  if (currentFilter !== 'All') list = list.filter(r => r.recordType === currentFilter);
+  if (search) list = list.filter(r =>
+    r.doctorName.toLowerCase().includes(search) ||
+    r.hospitalName.toLowerCase().includes(search) ||
+    r.recordType.toLowerCase().includes(search) ||
+    (r.diagnosis?.disease || '').toLowerCase().includes(search)
+  );
+  renderRecords(list);
+}
+
+// ── Access Requests ────────────────────────────────────────────
+async function loadAccess() {
+  try {
+    const { requests } = await GET('/patient/access-requests');
+    const el = document.getElementById('access-list');
+    if (!requests.length) {
+      el.innerHTML = '<div class="empty-state"><div class="empty-icon">🔒</div><div class="empty-text">No access requests yet.</div></div>';
+      return;
+    }
+    const statusBadge = s => {
+      if (s === 'approved') return '<span class="badge badge-green">✅ Approved</span>';
+      if (s === 'rejected') return '<span class="badge badge-red">❌ Rejected</span>';
+      return '<span class="badge badge-yellow">⏳ Pending</span>';
+    };
+    el.innerHTML = requests.map(req => `
+      <div class="access-card">
+        <div class="access-header">
+          <div>
+            <div class="access-doc-name">👨‍⚕️ ${req.doctorId?.name || 'Unknown Doctor'}</div>
+            <div class="access-doc-sub">🏥 ${req.doctorId?.hospitalName || ''} · ${req.doctorId?.specialization || ''}</div>
+            <div class="access-doc-sub" style="margin-top:4px">📝 Reason: ${req.reason || 'N/A'}</div>
+            <div class="access-doc-sub">📅 Requested: ${fmtDate(req.requestedAt)}</div>
+            ${req.expiresAt ? `<div class="access-doc-sub" style="color:var(--yellow)">⏰ Expires: ${fmtDate(req.expiresAt)}</div>` : ''}
+          </div>
+          <div>${statusBadge(req.status)}</div>
+        </div>
+        ${req.status === 'pending' ? `
+          <div class="access-btns">
+            <button class="btn btn-success btn-sm" onclick="respondAccess('${req._id}','approved')">✅ Approve</button>
+            <button class="btn btn-danger btn-sm"  onclick="respondAccess('${req._id}','rejected')">❌ Reject</button>
+          </div>` : ''}
+      </div>`).join('');
+  } catch(e) { console.error(e); }
+}
+
+async function respondAccess(id, status) {
+  try {
+    await POST(`/patient/respond-access/${id}`, { status });
+    toastSuccess(`Access ${status} successfully.`);
+    await loadAccess();
+  } catch(e) { toastError(e.message); }
+}
+
+// ── Audit Logs ─────────────────────────────────────────────────
+async function loadLogs() {
+  try {
+    const { logs } = await GET('/patient/audit-logs');
+    const el = document.getElementById('logs-list');
+    if (!logs.length) {
+      el.innerHTML = '<div class="empty-state"><div class="empty-icon">📜</div><div class="empty-text">No logs yet.</div></div>';
+      return;
+    }
+    const icons = { USER_LOGIN:'🔐', RECORDS_VIEWED:'👁', USER_REGISTERED:'✅', ACCESS_REQUESTED:'📨', ACCESS_APPROVED:'✅', ACCESS_REJECTED:'❌', RECORD_ADDED:'📋' };
+    el.innerHTML = `<div class="log-list">${logs.map(l => `
+      <div class="log-item">
+        <span class="log-icon">${icons[l.action] || '📌'}</span>
+        <div>
+          <div class="log-text">${l.details}</div>
+          <div class="log-time">${fmtDateTime(l.timestamp)}</div>
+        </div>
+      </div>`).join('')}</div>`;
+  } catch(e) { console.error(e); }
+}
+
+// ── QR Code ────────────────────────────────────────────────────
+function buildQR() {
+  if (!USER) return;
+  const data = JSON.stringify({
+    name:       USER.name,
+    healthId:   USER.healthId,
+    bloodGroup: USER.bloodGroup,
+    allergies:  USER.allergies,
+    emergency:  USER.emergencyContact
+  });
+  renderQR('qr-img', data);
+
+  document.getElementById('qr-info').innerHTML = `
+    <div class="qr-info-item"><div class="qr-info-label">PATIENT NAME</div><div class="qr-info-value">${USER.name}</div></div>
+    <div class="qr-info-item"><div class="qr-info-label">HEALTH ID</div><div class="qr-info-value" style="color:var(--blue)">${USER.healthId}</div></div>
+    <div class="qr-info-item"><div class="qr-info-label">BLOOD GROUP</div><div class="qr-info-value" style="color:var(--red)">${USER.bloodGroup || 'Not set'}</div></div>
+    <div class="qr-info-item"><div class="qr-info-label">ALLERGIES</div><div class="qr-info-value" style="color:var(--yellow)">${(USER.allergies||[]).join(', ') || 'None'}</div></div>
+    ${USER.emergencyContact?.name ? `
+    <div class="qr-info-item"><div class="qr-info-label">EMERGENCY CONTACT</div><div class="qr-info-value">${USER.emergencyContact.name}</div></div>
+    <div class="qr-info-item"><div class="qr-info-label">EMERGENCY PHONE</div><div class="qr-info-value">${USER.emergencyContact.phone}</div></div>` : ''}
+  `;
+}
+</script>
+</body>
+</html>

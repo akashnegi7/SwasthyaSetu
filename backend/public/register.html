@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register · SwasthyaSetu+</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+<div class="auth-page">
+  <div class="auth-card" style="max-width:500px">
+    <h1 class="auth-title">🏥 Create Account</h1>
+    <p class="auth-sub">Join SwasthyaSetu+ – India's Digital Health System</p>
+
+    <!-- Role Toggle -->
+    <div class="role-toggle">
+      <button class="role-btn active" id="btn-patient" onclick="switchRole('patient')">👤 Register as Patient</button>
+      <button class="role-btn" id="btn-doctor"  onclick="switchRole('doctor')">👨‍⚕️ Register as Doctor</button>
+    </div>
+
+    <form id="reg-form" onsubmit="handleRegister(event)">
+
+      <!-- Common -->
+      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">── Basic Information</div>
+      <div class="form-group">
+        <label class="form-label">Full Name *</label>
+        <input class="form-input" id="name" placeholder="e.g. Amit Kumar" required />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Email *</label>
+          <input class="form-input" type="email" id="email" placeholder="you@email.com" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone</label>
+          <input class="form-input" id="phone" placeholder="9876543210" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password *</label>
+        <input class="form-input" type="password" id="password" placeholder="Min 6 characters" required minlength="6" />
+      </div>
+
+      <!-- Patient Fields -->
+      <div id="patient-fields">
+        <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;margin-top:4px">── Medical Details</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Date of Birth</label>
+            <input class="form-input" type="date" id="dateOfBirth" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Gender</label>
+            <select class="form-select" id="gender">
+              <option>Male</option><option>Female</option><option>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Blood Group</label>
+            <select class="form-select" id="bloodGroup">
+              <option value="">Select</option>
+              <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+              <option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">City / Address</label>
+            <input class="form-input" id="address" placeholder="City, State" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Known Allergies (comma separated)</label>
+          <input class="form-input" id="allergies" placeholder="Penicillin, Dust, Pollen" />
+        </div>
+      </div>
+
+      <!-- Doctor Fields -->
+      <div id="doctor-fields" class="hidden">
+        <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;margin-top:4px">── Professional Details</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Specialization *</label>
+            <input class="form-input" id="specialization" placeholder="e.g. Cardiology" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">License Number *</label>
+            <input class="form-input" id="licenseNumber" placeholder="MCI-DEL-2015-XXXX" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Hospital Name *</label>
+          <input class="form-input" id="hospitalName" placeholder="e.g. AIIMS Delhi" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Hospital Location *</label>
+            <input class="form-input" id="hospitalLocation" placeholder="City, State" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Experience (years)</label>
+            <input class="form-input" type="number" id="experience" placeholder="5" />
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-full" type="submit" id="reg-btn" style="margin-top:8px">
+        🚀 Register as Patient
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      Already have an account? <a href="/login.html">Login here</a><br><br>
+      <a href="/" style="color:var(--text3)">← Back to Home</a>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+  let role = 'patient';
+
+  function switchRole(r) {
+    role = r;
+    document.getElementById('btn-patient').classList.toggle('active', r === 'patient');
+    document.getElementById('btn-doctor').classList.toggle('active', r === 'doctor');
+    document.getElementById('patient-fields').classList.toggle('hidden', r === 'doctor');
+    document.getElementById('doctor-fields').classList.toggle('hidden', r === 'patient');
+    document.getElementById('reg-btn').textContent = r === 'patient' ? '🚀 Register as Patient' : '🚀 Register as Doctor';
+  }
+
+  function v(id) { return document.getElementById(id)?.value?.trim() || ''; }
+
+  async function handleRegister(e) {
+    e.preventDefault();
+    const btn = document.getElementById('reg-btn');
+    btn.textContent = '⏳ Creating account…'; btn.disabled = true;
+
+    const body = { name: v('name'), email: v('email'), password: v('password'), phone: v('phone'), role };
+    if (role === 'patient') {
+      Object.assign(body, {
+        dateOfBirth: v('dateOfBirth') || undefined,
+        gender:      v('gender'),
+        bloodGroup:  v('bloodGroup') || undefined,
+        address:     v('address') || undefined,
+        allergies:   v('allergies') ? v('allergies').split(',').map(s => s.trim()).filter(Boolean) : []
+      });
+    } else {
+      Object.assign(body, {
+        specialization:   v('specialization'),
+        licenseNumber:    v('licenseNumber'),
+        hospitalName:     v('hospitalName'),
+        hospitalLocation: v('hospitalLocation'),
+        experience:       v('experience') ? Number(v('experience')) : undefined
+      });
+    }
+
+    try {
+      const data = await POST('/auth/register', body);
+      setAuth(data.token, data.user);
+      toastSuccess('Account created! ID: ' + (data.user.healthId || data.user.doctorId));
+      setTimeout(() => {
+        window.location.href = role === 'patient' ? '/patient/dashboard.html' : '/doctor/dashboard.html';
+      }, 800);
+    } catch (err) {
+      toastError(err.message || 'Registration failed.');
+      btn.textContent = '🚀 Register'; btn.disabled = false;
+    }
+  }
+</script>
+</body>
+</html>

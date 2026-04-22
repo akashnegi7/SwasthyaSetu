@@ -1,0 +1,10 @@
+const router = require('express').Router();
+const { protect, doctorOnly } = require('../middleware/auth');
+const c = require('../controllers/doctorController');
+router.use(protect, doctorOnly);
+router.get('/patient/:healthId', c.searchPatient);
+router.post('/request-access', c.requestAccess);
+router.post('/add-record', c.addRecord);
+router.get('/patient-records/:healthId', c.getPatientRecords);
+router.get('/activity', c.getActivity);
+module.exports = router;
